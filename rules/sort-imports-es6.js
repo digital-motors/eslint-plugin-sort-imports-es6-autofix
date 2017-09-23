@@ -39,6 +39,10 @@ module.exports = {
                     },
                     ignoreMemberSort: {
                         type: "boolean"
+                    },
+                    localImportSortStrategy: {
+                        type: "string",
+                        enum: ["mixed", "before", "after"]
                     }
                 },
                 additionalProperties: false
@@ -55,6 +59,7 @@ module.exports = {
             ignoreMemberSort = configuration.ignoreMemberSort || false,
             memberSyntaxSortOrder = configuration.memberSyntaxSortOrder || ["none", "all", "multiple", "single"],
             typeSortStrategy = configuration.typeSortStrategy || "after",
+            localImportSortStrategy = configuration.localImportSortStrategy || "mixed",
             sourceCode = context.getSourceCode();
         let previousDeclaration = null,
             initialSource = null,
@@ -89,6 +94,10 @@ module.exports = {
          */
         function getMemberParameterGroupIndex(node) {
             return memberSyntaxSortOrder.indexOf(usedMemberSyntax(node));
+        }
+
+        function isLocalImport(node) {
+          return node.source.value.startsWith('.');
         }
 
         /**
@@ -145,17 +154,22 @@ module.exports = {
           const sorted = fixed.sort((a, b) => {
             const currentMemberSyntaxGroupIndex = getMemberParameterGroupIndex(b[0]),
                 currentMemberIsType = b[0].importKind && b[0].importKind === 'type',
+                currentMemberIsLocalImport = isLocalImport(b[0]),
                 previousMemberSyntaxGroupIndex = getMemberParameterGroupIndex(a[0]),
-                previousMemberIsType = a[0].importKind && a[0].importKind === 'type';
+                previousMemberIsType = a[0].importKind && a[0].importKind === 'type',
+                previousMemberIsLocalImport = isLocalImport(a[0]);
             let currentLocalMemberName = getFirstLocalMemberName(b[0]),
                 previousLocalMemberName = getFirstLocalMemberName(a[0]);
             if (ignoreCase) {
                 previousLocalMemberName = previousLocalMemberName && previousLocalMemberName.toLowerCase();
                 currentLocalMemberName = currentLocalMemberName && currentLocalMemberName.toLowerCase();
             }
+
             if (typeSortStrategy !== "mixed" && currentMemberIsType !== previousMemberIsType) {
               return ((currentMemberIsType && typeSortStrategy === "before") || (previousMemberIsType && typeSortStrategy === "after")) ? 1 : -1;
-            } if (currentMemberSyntaxGroupIndex !== previousMemberSyntaxGroupIndex) {
+            } else if (localImportSortStrategy !== "mixed" && currentMemberIsLocalImport !== previousMemberIsLocalImport) {
+              return ((currentMemberIsLocalImport && localImportSortStrategy === "before") || (previousMemberIsLocalImport && localImportSortStrategy === "after")) ? 1 : -1;
+            } else if (currentMemberSyntaxGroupIndex !== previousMemberSyntaxGroupIndex) {
               return (currentMemberSyntaxGroupIndex < previousMemberSyntaxGroupIndex) ? 1 : -1;
             } else if(previousLocalMemberName && currentLocalMemberName) {
               return (currentLocalMemberName < previousLocalMemberName) ? 1 : -1;
@@ -176,8 +190,11 @@ module.exports = {
                 if (previousDeclaration) {
                     const currentMemberSyntaxGroupIndex = getMemberParameterGroupIndex(node),
                         currentMemberIsType = node.importKind && node.importKind === 'type',
+                        currentMemberIsLocalImport = isLocalImport(node),
                         previousMemberSyntaxGroupIndex = getMemberParameterGroupIndex(previousDeclaration),
-                        previousMemberIsType = previousDeclaration.importKind && previousDeclaration.importKind === 'type';
+                        previousMemberIsType = previousDeclaration.importKind && previousDeclaration.importKind === 'type',
+                        previousMemberIsLocalImport = isLocalImport(previousDeclaration);
+
                     let currentLocalMemberName = getFirstLocalMemberName(node),
                         previousLocalMemberName = getFirstLocalMemberName(previousDeclaration);
 
@@ -196,6 +213,19 @@ module.exports = {
                                 message: "Expected type imports '{{typeSortStrategy}}' all other imports.",
                                 data: {
                                     typeSortStrategy: typeSortStrategy,
+                                },
+                                fix(fixer) {
+                                  return fixer.replaceTextRange([allDeclarations[0].range[0], allDeclarations[allDeclarations.length - 1].range[1]], sortAndFixAllNodes(initialSource, allDeclarations));
+                                }
+                            });
+                        }
+                    } else if (localImportSortStrategy !== "mixed" && currentMemberIsLocalImport !== previousMemberIsLocalImport) {
+                        if ((currentMemberIsLocalImport && localImportSortStrategy === "before") || (previousMemberIsLocalImport && localImportSortStrategy === "after")) {
+                            context.report({
+                                node: node,
+                                message: "Expected local imports '{{localImportSortStrategy}}' other imports.",
+                                data: {
+                                    localImportSortStrategy: localImportSortStrategy,
                                 },
                                 fix(fixer) {
                                   return fixer.replaceTextRange([allDeclarations[0].range[0], allDeclarations[allDeclarations.length - 1].range[1]], sortAndFixAllNodes(initialSource, allDeclarations));
