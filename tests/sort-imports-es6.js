@@ -197,6 +197,33 @@ ruleTester.run("sort-imports", rule, {
             parserOptions: parserOptions,
             parser: 'babel-eslint',
             options: [{typeSortStrategy: "mixed"}],
+        },
+        // ensure that local imports are in the right place and options are evaluated.
+        {
+            code:
+            "import bar from './bar'; \n" +
+            "import baz from 'baz'; \n" +
+            "import foo from '../foo';",
+            parserOptions: parserOptions,
+            parser: 'babel-eslint',
+        },
+        {
+            code:
+            "import baz from 'baz'; \n" +
+            "import bar from './bar'; \n" +
+            "import foo from '../foo';",
+            parserOptions: parserOptions,
+            parser: 'babel-eslint',
+            options: [{localImportSortStrategy: "after"}],
+        },
+        {
+            code:
+            "import bar from './bar'; \n" +
+            "import foo from '../foo'; \n" +
+            "import baz from 'baz';",
+            parserOptions: parserOptions,
+            parser: 'babel-eslint',
+            options: [{localImportSortStrategy: "before"}],
         }
     ],
     invalid: [
@@ -321,6 +348,41 @@ ruleTester.run("sort-imports", rule, {
             errors: [{
                 message: "Member 'c' of the import declaration should be sorted alphabetically.",
                 type: "ImportSpecifier"
+            }]
+        },
+        // ensure that local imports are in the right place.
+        {
+            code:
+            "import bar from './bar'; \n" +
+            "import baz from 'baz'; \n" +
+            "import foo from '../foo';",
+            output:
+            "import baz from 'baz'; \n" +
+            "import bar from './bar'; \n" +
+            "import foo from '../foo';",
+            parserOptions: parserOptions,
+            parser: 'babel-eslint',
+            options: [{localImportSortStrategy: "after"}],
+            errors: [{
+                message: "Expected local imports 'after' other imports.",
+                type: "ImportDeclaration"
+            }]
+        },
+        {
+            code:
+            "import baz from 'baz'; \n" +
+            "import bar from './bar'; \n" +
+            "import foo from '../foo';",
+            output:
+            "import bar from './bar'; \n" +
+            "import foo from '../foo'; \n" +
+            "import baz from 'baz';",
+            parserOptions: parserOptions,
+            parser: 'babel-eslint',
+            options: [{localImportSortStrategy: "before"}],
+            errors: [{
+                message: "Expected local imports 'before' other imports.",
+                type: "ImportDeclaration"
             }]
         },
         // ensure that a single named import is treated differently from a default import
