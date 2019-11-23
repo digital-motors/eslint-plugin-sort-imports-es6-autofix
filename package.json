@@ -1,19 +1,16 @@
 {
-  "name": "eslint-plugin-sort-imports-es6-autofix",
-  "version": "0.1.1",
+  "name": "@digitalmotors/eslint-plugin-sort-imports-es6-autofix",
+  "version": "0.2.0",
   "description": "A sort-imports rule that properly distinguishes between ES6 import types.",
   "keywords": [
     "eslint",
     "eslintplugin",
     "eslint-plugin"
   ],
-  "author": [
-    "rem",
-    "marudor"
-  ],
+  "author": "rem,marudor,bdelaforest",
   "repository": {
     "type": "git",
-    "url": "https://github.com/schuchertmanagementberatung/eslint-plugin-sort-imports-es6-autofix.git"
+    "url": "https://github.com/digitalmotors/eslint-plugin-sort-imports-es6-autofix.git"
   },
   "main": "index.js",
   "scripts": {
