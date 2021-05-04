@@ -1,5 +1,5 @@
 {
-  "name": "@digitalmotors/eslint-plugin-sort-imports-es6-autofix",
+  "name": "@digital-motors-boatyard/eslint-plugin-sort-imports-es6-autofix",
   "version": "0.2.0",
   "description": "A sort-imports rule that properly distinguishes between ES6 import types.",
   "keywords": [
@@ -10,7 +10,7 @@
   "author": "rem,marudor,bdelaforest",
   "repository": {
     "type": "git",
-    "url": "https://github.com/digitalmotors/eslint-plugin-sort-imports-es6-autofix.git"
+    "url": "https://github.com/digital-motors-boatyard/eslint-plugin-sort-imports-es6-autofix.git"
   },
   "main": "index.js",
   "scripts": {
